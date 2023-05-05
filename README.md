@@ -1,5 +1,33 @@
 # Practica-4
 
+
+
+
+## Instrucciones github terminal
+
+### Añadir clave ssh
+
+```ssh-add "directorio id_rsa"```
+
+### Quitar la clave ssh
+
+```ssh-add -D```
+
+### Actualizar github
+
+```git pull```
+
+
+### Pasos para hacer cambios
+
+```
+git add "archivo"
+git commit -m "mensaje"
+git push
+```
+
+
+
 ## Instrucciones para conectarnos al cluster
 
 ### Activar el cluster
