@@ -1,6 +1,34 @@
+# Índice 
 
- - [Instrucciones](#id0)
  - [Bicimad](#id1)
+ - [Instrucciones del terminal](#id0)
+
+# Bicimad <a name=id1> </a>
+
+Repositorios para ver usos básicos de spark e ideas:
+
+ - https://github.com/krishnaik06/Pyspark-With-Python
+ - https://github.com/SuperJohn/spark-and-python-for-big-data-with-pyspark
+ - https://github.com/tirthajyoti/Spark-with-Python
+
+
+Datos que nos encontramos:
+
+```python
+data0 = { 
+    "_id" : { "$oid" : "5cf83b752f3843a016be4e2f" }, 
+    "user_day_code" : "e4d55deb9ac172a8d8f5f0a32599815bd51b7c8760d67e42b11adf7c0829341b", 
+    "idplug_base" : 21, 
+    "user_type" : 1, 
+    "idunplug_base" : 8, 
+    "travel_time" : 219, 
+    "idunplug_station" : 90, 
+    "ageRange" : 0, 
+    "idplug_station" : 66, 
+    "unplug_hourTime" : { "$date" : "2019-06-01T00:00:00.000+0200" }, 
+    "zip_code" : "" 
+}
+```
 
 # Instrucciones generales del terminal <a name=id0> </a>
 
@@ -62,25 +90,5 @@ hdfs dfs -get "archivo"
 hdfs dfs -rm "archivo"
 hdfs dfs -ls
 
-```
-
-# Datos del bicimad <a name=id1> </a>
-
-Una fila de prueba
-
-```python
-data0 = { 
-    "_id" : { "$oid" : "5cf83b752f3843a016be4e2f" }, 
-    "user_day_code" : "e4d55deb9ac172a8d8f5f0a32599815bd51b7c8760d67e42b11adf7c0829341b", 
-    "idplug_base" : 21, 
-    "user_type" : 1, 
-    "idunplug_base" : 8, 
-    "travel_time" : 219, 
-    "idunplug_station" : 90, 
-    "ageRange" : 0, 
-    "idplug_station" : 66, 
-    "unplug_hourTime" : { "$date" : "2019-06-01T00:00:00.000+0200" }, 
-    "zip_code" : "" 
-}
 ```
 
