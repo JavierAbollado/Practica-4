@@ -1,6 +1,6 @@
 
  - [Instrucciones](#id0)
- - [BicimAd](#id1)
+ - [Bicimad](#id1)
 
 # Instrucciones generales del terminal <a name=id0> </a>
 
