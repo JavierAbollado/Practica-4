@@ -6,6 +6,7 @@
     - [Ideas](#id1.2)
     - [Repositorios pyspark para ayuda](#id1.3)
     - [Datos que nos encontramos](#id1.4)
+    - [Preguntas](#id1.5)
 
  - [Instrucciones del terminal](#id2)
 
@@ -90,6 +91,29 @@ data0 = {
 }
 ```
 
+## Preguntas <a name=id1.5> </a>
+
+### Diferencias entre Dataframes y RDD. ¿Son los dos distribuidos? -> Sí
+
+In PySpark, both DataFrames and RDDs (Resilient Distributed Datasets) can be spread across multiple machines in a cluster.
+
+DataFrames are built on top of RDDs and provide a higher-level API for working with structured data. Underneath the DataFrame API, the data is still distributed across multiple machines. DataFrames use the Catalyst optimizer to optimize and execute queries in a distributed manner.
+
+When you perform transformations or actions on a DataFrame, the operations are executed in parallel across the cluster. The data is partitioned and processed in parallel on different machines, leveraging the distributed computing capabilities of Spark.
+
+Similarly, RDDs in PySpark are distributed collections of data that are spread across multiple machines in the cluster. RDDs allow for fine-grained control over the distribution and parallel processing of data. RDDs can be created from various data sources and transformed using operations like map, filter, reduce, and more. These transformations and actions are executed in a distributed manner across the cluster.
+
+So, both DataFrames and RDDs in PySpark can leverage the distributed computing capabilities of a cluster and distribute data across multiple machines for parallel processing.
+
+### Qué hace exactamente 'toPandas()'? -> Costoso computacionalmente y pérdida de la capacidad distruida.
+
+When you have a PySpark DataFrame, it is indeed distributed across multiple machines in the cluster. PySpark distributes the data and computation across the cluster to take advantage of parallel processing.
+
+However, when you call the **toPandas()** function on a PySpark DataFrame, it converts the distributed DataFrame into a Pandas DataFrame, which is a local, in-memory data structure. The toPandas() function collects all the data from the distributed DataFrame and brings it back to the driver node as a Pandas DataFrame. At this point, the data is no longer distributed and resides entirely in memory on the driver node.
+
+The resulting Pandas DataFrame obtained from **toPandas()** is a regular Pandas object, and any subsequent operations performed on it, including plotting and other Pandas-specific functions, are executed on a single machine. The data is no longer distributed across the cluster, and the distributed computing capabilities of PySpark are not utilized.
+
+It's important to note that calling **toPandas()** can be an expensive operation because it requires transferring all the data from the distributed cluster to the driver node, which may cause memory issues if the DataFrame is large. It's generally recommended to perform data manipulations and computations on distributed PySpark DataFrames whenever possible to leverage the parallel processing capabilities of Spark.
 
 # Instrucciones generales del terminal  <a name=id2> </a>
 
