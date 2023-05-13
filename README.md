@@ -23,7 +23,7 @@ Encontrar estaciones donde se necesiten más bicis (halla más demanda) y otras 
 
 ## Ideas <a name=id1.2> </a>
 
- - Sumar por días los plugs y unplugs de cada una de las estaciones. Así podemos ver las demandas de cada estación. Luego podemos compararlo por semanas o cualquier periodo de tiempo.
+### 1) Sumar por días los plugs y unplugs de cada una de las estaciones. Así podemos ver las demandas de cada estación. Luego podemos compararlo por semanas o cualquier periodo de tiempo.
 
 ```python 
 # contar los plugs y unplugs
@@ -36,6 +36,33 @@ df2 = df2.withColumnRenamed('idplug_station', unplug_hourTime'id').withColumnRen
 
 # unirlas por el id de la estación
 df3 = df1.join(df2, on='id')
+```
+
+### 2) En relación a tiempos de uso, se podría pensar (se verá en los datos) que los jovenes usan durante un mayor periodo de tiempo seguido las bicis, con respecto a los más mayores. Por lo que podemos medir eso:
+
+```python
+tiempo_total = df.groupBy('ageRange').sum('travel_time').orderBy('ageRange')
+tiempo_medio = df.groupBy('ageRange').mean('travel_time').orderBy('ageRange')
+```
+
+aquí tenemos el tiempo total y tiempo medio, por edades. Recordar que el rango 0 son los datos desconocidos por lo que podemos hacer un ```drop(0)``` si no los queremos. Con esto podemos buscar desde de dónde salen más frecuentemente ciertos rangos de edades y a dónde van. Eso sería teniendo en cuenta la localización y las edades. A lo mejor agrupando en clusters por áreas (más complicado) y tener en cuenta dónde se necesitanm más. Un código podría ser:
+
+ - Primero haríamos un preproceso de las localizaciones de la estaciones. En pseudocódigo sería algo como
+
+```python
+# Guardar puntos (x,y) con la posición geográfica en el mapa (lo podemos discretizar y eso para simplificar)
+estaciones = df.id_station.discrete()
+# le decimos en cuántos grupos queremos dividir la ciudad (k) y nos da los grupos hechos. 
+grupos = keras.cluster(estaciones, k)     
+# hacer de alguna manera una función lambda que nos pase el número de estación a su grupo. Y la guardamos en una nueva columna "groups"
+df.groups = df.select('id_station').apply(lambda estacion : grupos(estacion))  
+```
+
+ - finalmente hacemos algo parecido a esto para tener por áreas el número de gente (por edades) que sale de cada zona, así como las bicis disponibles en dichas regiones:
+
+```python
+gente_por_zonas = df.groupBy('groups').groupBy('ageRange').count().orderBy('ageRange')
+bicis_por_zonas = df.groupBy('groups').count()
 ```
 
 ## Repositorios pyspark para ayuda <a name=id1.3> </a>
