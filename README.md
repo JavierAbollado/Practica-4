@@ -39,7 +39,7 @@ df2 = df2.withColumnRenamed('idplug_station', unplug_hourTime'id').withColumnRen
 df3 = df1.join(df2, on='id')
 ```
 
-### 2) En relación a tiempos de uso, se podría pensar (se verá en los datos) que los jovenes usan durante un mayor periodo de tiempo seguido las bicis, con respecto a los más mayores. Por lo que podemos medir eso:
+### 2) En relación a tiempos de uso, se podría pensar (se verá en los datos) que los jovenes usan durante un mayor periodo de tiempo seguido las bicis, con respecto a los más mayores.
 
 ```python
 tiempo_total = df.groupBy('ageRange').sum('travel_time').orderBy('ageRange')
@@ -65,6 +65,45 @@ df.groups = df.select('id_station').apply(lambda estacion : grupos(estacion))
 gente_por_zonas = df.groupBy('groups').groupBy('ageRange').count().orderBy('ageRange')
 bicis_por_zonas = df.groupBy('groups').count()
 ```
+
+### 3) Demanda por zonas.
+
+En relación a la separación por zonas anteior (clustering de las estaciones). Podemos observar individualmente la actividad de cada uno. Por ejemplo, guardar cuantas bicis salen de esa zona al día y además ver a dónde van. Para ello creamos dos nuevas columnas (para discretizar), donde guardamos los plugs y unplugs pero en vez de por estaciones, por grupos de estaciones:
+
+ - 'idunplug_station_group' 
+ - 'idplug_station_group'
+
+luego para hacer el estudio completo agrupamos los datos por dias, es decir, guardamos como una tabla con los datos (salida desde la base hasta luegares de destino) de todos los lunes, martes,... Así podremos ver que días se separan más de la media. Es decir, si los sabados y domingos en un lado tiene una demanda mucho menor de lo habitual en una zona, y por el contrario en otra sube. Ahí es donde buscamos hacer los cambios. Para esto nuevo tendremos que crear un columna, 'day', con el dato: día de la semana (se puede sacar con un lambda de la parte de la fecha).
+
+```python
+# Agrupar por zonas: por días: los sitios a los que van,
+# y por lo tanto, también tendremos la cantidad de movimiento de ese lugar.
+estudio_por_dias_y_zonas = df.gruopBy('idunplug_station_group').groupBy('day').groupBy('idplug_station_group').count()
+
+# Esquema de 'estudio_por_dias_y_zonas':
+#
+# id1 -> lunes  -> station 1 = [20,13,2,34,54,4,...] # estos son los datos de todos los lunes del mes / año ..
+#                  station 2 = [10,23,4,34,74,4,...]
+#                  ...
+#        martes -> station 1 = [...]
+#        ...
+# id2 -> lunes -> ...
+#
+#
+
+# Así para conseguir las listas con la media y desviación típica de dichas listas de valores hacemos:
+media = estudio_por_dias_y_zonas.mean()
+std   = estudio_por_dias_y_zonas.std()
+
+# Luego filtramos por los que están muy por debajo de la media (o muy por encima). Para ello vemos si estan 
+# fuera del 80% (o lo que sea) de una población normal de media y desviación típica las obtenidas.
+por_encima = estudio_por_dias_y_zonas.filter((datos - media) / std > Z_alpha)
+por_debajo = estudio_por_dias_y_zonas.filter((datos - media) / std < Z_alpha)
+```
+
+Comentario: está muy por encima, no he probado nada de código. 
+
+
 
 ## Repositorios pyspark para ayuda <a name=id1.3> </a>
 
