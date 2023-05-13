@@ -25,6 +25,19 @@ Encontrar estaciones donde se necesiten más bicis (halla más demanda) y otras 
 
  - Sumar por días los plugs y unplugs de cada una de las estaciones. Así podemos ver las demandas de cada estación. Luego podemos compararlo por semanas o cualquier periodo de tiempo.
 
+```python 
+# contar los plugs y unplugs
+df1 = df.groupBy('idunplug_station').count()
+df2 = df.groupBy('idplug_station').count()
+
+# renombrar las columnas para unirlas
+df1 = df1.withColumnRenamed('idunplug_station', 'id').withColumnRenamed('count', 'n_unplugs')
+df2 = df2.withColumnRenamed('idplug_station', unplug_hourTime'id').withColumnRenamed('count', 'n_plugs')
+
+# unirlas por el id de la estación
+df3 = df1.join(df2, on='id')
+```
+
 ## Repositorios pyspark para ayuda <a name=id1.3> </a>
 
  - https://github.com/krishnaik06/Pyspark-With-Python
