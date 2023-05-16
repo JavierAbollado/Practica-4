@@ -107,9 +107,16 @@ Comentario: está muy por encima, no he probado nada de código.
 
 ## Repositorios pyspark para ayuda <a name=id1.3> </a>
 
+### Github
+
  - https://github.com/krishnaik06/Pyspark-With-Python
  - https://github.com/SuperJohn/spark-and-python-for-big-data-with-pyspark
  - https://github.com/tirthajyoti/Spark-with-Python
+
+### Documentación
+
+ - [Funciones en SQL DataFrames](https://spark.apache.org/docs/3.1.1/api/python/reference/api/pyspark.sql.DataFrame.html)
+ - [Funciones de pyspark externas para realizar sobre columnas](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html)
 
 
 ## Datos que nos encontramos <a name=id1.4> </a>
