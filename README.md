@@ -117,6 +117,7 @@ Comentario: está muy por encima, no he probado nada de código.
 
  - [Funciones en SQL DataFrames](https://spark.apache.org/docs/3.1.1/api/python/reference/api/pyspark.sql.DataFrame.html)
  - [Funciones de pyspark externas para realizar sobre columnas](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/functions.html)
+ - [Maps y combinaciones de columans](https://sparkbyexamples.com/pyspark/pyspark-add-new-column-to-dataframe/#:~:text=In%20PySpark%2C%20to%20add%20a,None%20use%20lit(None)%20.)
 
 
 ## Datos que nos encontramos <a name=id1.4> </a>
