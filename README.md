@@ -21,9 +21,8 @@
 
 ## Tema elegido <a name=id1.1> </a>
 
-(Era algo así corregidlo quien quiera) 
-
-Encontrar estaciones donde se necesiten más bicis (haya más demanda) y otras donde sobren (no tienen tanta demanda) para recolocar mejor la bicis por la ciudad. Tener en cuenta también las zonas. Ya que las demandas de las estaciones próximas entre sí estarán (lo normal) relacionadas. También ver si cómo cambia la demanda en los fines de semana, y a lo mejor proponer cambios los viernes por ejemplo de las bicis de un sitio a otro (luegares más lejanos de las zonas de trabajo sería lo normal). Así como observar cómo cambia la demanda durante el día. 
+Estudiaremos la demanda de bicicletas agrupando por barrios y los movimientos de ellas entre los distintos barrios. Además veremos el crecimiento de bicimad a lo largo del tiempo. También miraremos como cambia la demanda en función de los días de la semana. 
+ 
 
 ## Ideas <a name=id1.2> </a>
 
