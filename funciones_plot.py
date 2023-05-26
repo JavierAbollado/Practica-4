@@ -419,7 +419,7 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         # PLOT DERECHO
         # ------------
 
-        ax = fig.add_subplot(f, c, 2)
+        ax = fig.add_subplot(111)
                 
         ax.scatter(
             x = df_total["Latitud"],
