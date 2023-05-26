@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-
+#Separa las fechas por año, semana y día 
 def preprocess_dates(df):
         
     df_new = df.withColumn("dayofweek", dayofweek(df.unplug_hourTime.getItem("$date")))\
@@ -48,13 +48,14 @@ def preprocess_ids(df):
     return df_new
 
 
-
+#Devuelve un barrio aleatori
 def get_random_barrio(df):
     # Serán pocos valores (el nº de barrios) por lo que aunque parezca que hay mucho paso 
     # a pandas y a listas, la operación no es costosa. De todas formas lo suyo es que seleccionemos nosotros
     # uno manualmente
     return np.random.choice(df.select("id_salidas").distinct().toPandas()["id_salidas"].to_list())
 
+#Devuelve los años
 def get_years(df):
     # Guardar una lista con todos los años disponibles del DataFrame -> no serán más de 2 / 3 valores 
     # por lo que aunque parezca que hay mucho paso a pandas y a listas, la operación no es costosa
@@ -63,11 +64,12 @@ def get_years(df):
     return years
 
 
-
+#Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
 def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == True -> estudio uniendo todos los barrios
     
-     # Según queramos o no un estudio total modificamos el DataFrame
+    #Si total es true entonces hacemos un estudio de todos los barrios del Dataframe
     if not total:
+        #Si no introducimos un barrio en la funcion escoge uno aleatorio
         if barrio == None:
             barrio = get_random_barrio(df)
 
@@ -75,6 +77,7 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
     else:
         df_barrio = df
     
+    #Si no introducimos un año en la funcion coge todos los años
     years = years if years != None else get_years(df)
     
     df_plot = None
