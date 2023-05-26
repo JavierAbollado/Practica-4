@@ -1,5 +1,12 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+from pyspark.sql.functions import dayofweek, dayofyear, dayofmonth, weekofyear, month, year
+
+from pyspark.sql import functions # usaremos -> mean, stddev, max, min, col
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
 def preprocess_dates(df):
         
     df_new = df.withColumn("dayofweek", dayofweek(df.unplug_hourTime.getItem("$date")))\
