@@ -390,15 +390,15 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         df_salidas = df.filter(df.year == year).groupBy('id_salidas').count()\
                                         .withColumnRenamed("id_salidas", "id")\
                                         .withColumnRenamed("count", "n_salidas")\
-                                        .join(df_geo, "id_salidas", "left")\
+                                        .join(df_geo, on="id", "left")\
                                         .orderBy("id")
         df_llegadas = df.filter(df.year == year).groupBy('id_llegadas').count()\
                                         .withColumnRenamed("id_llegadas", "id")\
                                         .withColumnRenamed("count", "n_llegadas")\
-                                        .join(df_geo, "id_llegadas", "left")\
+                                        .join(df_geo, on="id", "left")\
                                         .orderBy("id")
         
-        df_total = df_salidas.join(df_llegadas, on="id").join(df_geo, on="id")
+        df_total = df_salidas.join(df_llegadas, on="id", "inner")
         df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_salidas"))\
                                                                                                     .toPandas()
         
