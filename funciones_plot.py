@@ -390,16 +390,16 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         df_salidas = df.filter(df.year == year).groupBy('id_salidas').count()\
                                         .withColumnRenamed("id_salidas", "id")\
                                         .withColumnRenamed("count", "n_salidas")\
-                                        .join(df_geo, on="id", "left")\
+                                        .join(df_geo, "id", "left")\
                                         .orderBy("id")
         df_llegadas = df.filter(df.year == year).groupBy('id_llegadas').count()\
                                         .withColumnRenamed("id_llegadas", "id")\
                                         .withColumnRenamed("count", "n_llegadas")\
-                                        .join(df_geo, on="id", "left")\
+                                        .join(df_geo, "id", "left")\
                                         .orderBy("id")
         
-        df_total = df_salidas.join(df_llegadas, on="id", "inner")
-        df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_salidas"))\
+        df_total = df_salidas.join(df_llegadas, "id", "inner")
+        df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_llegadas"))\
                                                                                                     .toPandas()
         
         
@@ -410,7 +410,7 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         df_total.plot.bar(
                 x = "id",
                 y = ["n_salidas", "n_llegadas"],
-                color = ["green", "red"],
+                color = ["red", "green"],
                 xlabel = "Barrios",
                 title = f"Salidas vs Llegadas\n--{year}--"
         )
@@ -419,6 +419,7 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         # PLOT DERECHO
         # ------------
 
+        fig = plt.figure()
         ax = fig.add_subplot(111)
                 
         ax.scatter(
@@ -428,6 +429,11 @@ def plot_diferencias_entrada_salida_por_barrios(df):
             s = df_total["diferencia"],
             alpha = 0.8
         )
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Diferencias entre salidas y llegadas\n--{year}--")
 
 
         plt.show()
