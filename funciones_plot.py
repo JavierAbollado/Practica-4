@@ -412,7 +412,8 @@ def plot_diferencias_entrada_salida_por_barrios(df):
         df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_llegadas"))\
                                                                                                     .toPandas()
         
-        
+        df_total.Latitud = df_total.Latitud.astype("float64")
+        df_total.Longitud = df_total.Longitud.astype("float64")
 
         # PLOT IZQUIERDO
         # --------------
