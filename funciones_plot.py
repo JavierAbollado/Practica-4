@@ -452,3 +452,116 @@ def plot_diferencias_entrada_salida_por_barrios(df):
 
         plt.show()
 
+
+
+#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+#Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
+def plot_stats_by_seasons(df):
+    
+    years = get_years(df)
+    
+    # get keys : id - geolocalización
+    df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])
+    
+    
+    for year in years:
+        
+        # crear plot
+        f, c = 4, 2
+        fig = plt.figure(figsize=(15,5*f))
+        fig.suptitle('--- Estudio por estaciones del año {year} --')
+    
+        
+        df2 = df.filter(df.year == year)\
+                    .groupBy("id_salidas", "month").count()\
+                    .orderBy("id_salidas")
+        
+        # separar en estaciones
+        names = ["Primavera", "Verano", "Otoño", "Invierno"]
+        df_seasons = [
+                df2.filter(df2.month >= 3  & df2.month <= 6), 
+                df2.filter(df2.month >= 7  & df2.month <= 9), 
+                df2.filter(df2.month >= 10 & df2.month <= 12), 
+                df2.filter(df2.month >= 1  & df2.month <= 2)
+        ] 
+
+        for i in range(4):
+
+            # recuperar info
+            df_season = df_seasons[i]
+            name = names[i]
+
+            # Añadir la desviación típica y la media de cada una de las estaciones
+            df_stats = df_season.groupBy("id_salidas").agg(
+                    functions.mean("count").alias("mean"), 
+                    functions.stddev("count").alias('std'),
+                    functions.min("count").alias('min'),
+                    functions.max("count").alias('max'),
+            ).join(df_geo, "id_salidas", "left").toPandas()
+            
+
+            # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
+            # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
+            # gráfica (los valores reales serán proporcionales a los resultados)
+            df_stats["std"] = df_stats["std"] / df_stats["mean"] * df_stats["mean"].max()
+            
+            # Columna con las diferencias (relativas) máximo - mínimo
+            df_stats["dif"] = (df_stats["max"] - df_stats["min"]) / df_stats["mean"]
+            
+            # maximos
+            maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
+            maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
+
+            # PLOT IZQUIERDO
+            # --------------
+            # Tendremos:
+            #  - BarPlot de los valores medios (en gris transparente para después aprecias las std)
+            #  - LinePlot de las std (relativa) en rojo
+            #  - ScatterPlot del valor máximo de : relative std -> para después analizarlo
+                        
+            ax = fig.add_subplot(f, c, 2*i + 1)
+
+            n = df_stats.shape[0]
+            x = range(n)
+            
+            ax.plot(x, df_stats["std"].values, "m-", label="std")
+            ax.bar(x, df_stats["mean"].values, color="grey", alpha=0.8, label="mean")
+            ax.bar(maximo_std.index[0], maximo_std["mean"].values[0], 
+                    color="m", label="max std: " + str(maximo_std["id_salidas"].values[0]))
+            ax.bar(maximo_dif.index[0], maximo_dif["mean"].values[0], 
+                        color="red", label="max dif: " + str(maximo_dif["id_salidas"].values[0]))
+            ax.legend()
+            ax.set_xlabel("Barrios")
+            ax.set_ylabel("Usos de las bicis")
+            ax.set_xticks([])
+            ax.set_title(f"Datos estadísticos sobre los barrios\n--{name} : {year}--")
+            
+            
+            # PLOT DERECHO
+            # ------------
+            # Tendremos un plot con las geolocalizaciones con los siguientes datos implícitos:
+            #  - Tamaño del punto: indica el la media de uso en esa zona (cuanto más grande más uso)
+            #  - Color: también se clasifican por la media de uso (los mismas colores indican mismas medias)
+
+            ax = fig.add_subplot(f, c, 2*i + 2)
+            
+            df_stats.Latitud_salidas = df_stats.Latitud_salidas.astype("float64")
+            df_stats.Longitud_salidas = df_stats.Longitud_salidas.astype("float64")
+                    
+            ax.scatter(
+                x = df_stats["Latitud_salidas"],
+                y = df_stats["Longitud_salidas"],
+                c = df_stats["mean"],
+                s = df_stats["mean"],
+                alpha = 0.8
+            )
+            ax.set_xlabel("Latitud")
+            ax.set_ylabel("Longitud")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_title(f"Datos geográficos sobre los barrios\n--{name} : {year}--")
+
+            # --------------
+
+        plt.show()
