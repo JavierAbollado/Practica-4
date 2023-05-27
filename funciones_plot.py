@@ -48,7 +48,7 @@ def preprocess_ids(df):
     return df_new
 
 
-#Devuelve un barrio aleatori
+#Devuelve un barrio aleatorio
 def get_random_barrio(df):
     # Serán pocos valores (el nº de barrios) por lo que aunque parezca que hay mucho paso 
     # a pandas y a listas, la operación no es costosa. De todas formas lo suyo es que seleccionemos nosotros
@@ -103,7 +103,7 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
     ).set_xticklabels(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
     
 
-
+#Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
 def plot_analisys_by_year(df):
     
     years = get_years(df)
@@ -130,6 +130,8 @@ def plot_analisys_by_year(df):
     )
 
 
+#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
 def plot_stats(df):
     # import matplotlib.pyplot as plt
     # import pandas as pd
@@ -231,7 +233,9 @@ def plot_stats(df):
 
 
 
-
+#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+#Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
 def plot_stats_by_weekends(df):
     
     years = get_years(df)
