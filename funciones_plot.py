@@ -478,6 +478,7 @@ def plot_stats_by_seasons(df):
         
         # separar en estaciones
         names = ["Primavera", "Verano", "Otoño", "Invierno"]
+        cmaps = ["spring", "summer", "autumn", "winter"] # tipos de mapas de colores
         df_seasons = [
                 df2.filter(df2.month >= 3).filter(df2.month <= 6), 
                 df2.filter(df2.month >= 7).filter(df2.month <= 9), 
@@ -490,6 +491,7 @@ def plot_stats_by_seasons(df):
             # recuperar info
             df_season = df_seasons[i]
             name = names[i]
+            cmap = cmaps[i]
 
             # Añadir la desviación típica y la media de cada una de las estaciones
             df_stats = df_season.groupBy("id_salidas").agg(
@@ -551,7 +553,7 @@ def plot_stats_by_seasons(df):
             ax.scatter(
                 x = df_stats["Latitud_salidas"],
                 y = df_stats["Longitud_salidas"],
-                c = df_stats["mean"],
+                cmap = cmap,
                 s = df_stats["mean"],
                 alpha = 0.8
             )
