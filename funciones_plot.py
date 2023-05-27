@@ -10,7 +10,7 @@ import numpy as np
 def preprocess_dates(df):
         
     df_new = df.withColumn("dayofweek", dayofweek(df.unplug_hourTime.getItem("$date")))\
-            .withColumn("dayofyear", dayofyear(df.unplug_hourTime.getItem("$date")))\
+            .withColumn("month", month(df.unplug_hourTime.getItem("$date")))\
             .withColumn("weekofyear", weekofyear(df.unplug_hourTime.getItem("$date")))\
             .withColumn("year", year(df.unplug_hourTime.getItem("$date")))\
             .drop('unplug_hourTime')
@@ -470,9 +470,8 @@ def plot_stats_by_seasons(df):
         # crear plot
         f, c = 4, 2
         fig = plt.figure(figsize=(15,5*f))
-        fig.suptitle('--- Estudio por estaciones del año {year} --')
+        fig.suptitle(f'Estudio por estaciones\n-- {year} --')
     
-        
         df2 = df.filter(df.year == year)\
                     .groupBy("id_salidas", "month").count()\
                     .orderBy("id_salidas")
