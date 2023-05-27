@@ -506,6 +506,11 @@ def plot_stats_by_seasons(df):
                     functions.max("count").alias('max'),
             ).join(df_geo, "id_salidas", "left").toPandas()
             
+            n = len(df_stats)
+            
+            if n == 0:
+                # no tenemos datos de esta estación
+                continue
 
             # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
             # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
@@ -518,24 +523,24 @@ def plot_stats_by_seasons(df):
             # maximos
             maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
             maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
-
+            
+            
             # PLOT IZQUIERDO
             # --------------
             # Tendremos:
             #  - BarPlot de los valores medios (en gris transparente para después aprecias las std)
             #  - LinePlot de las std (relativa) en rojo
             #  - ScatterPlot del valor máximo de : relative std -> para después analizarlo
-                        
+                
             ax = fig.add_subplot(f, c, 2*i + 1)
 
-            n = df_stats.shape[0]
             x = range(n)
             
             ax.plot(x, df_stats["std"].values, "m-", label="std")
             ax.bar(x, df_stats["mean"].values, color="grey", alpha=0.8, label="mean")
-            ax.bar(maximo_std.index[0], maximo_std["mean"].values[0], 
+            ax.bar(maximo_std.index, maximo_std["mean"].values, 
                     color="m", label="max std: " + str(maximo_std["id_salidas"].values[0]))
-            ax.bar(maximo_dif.index[0], maximo_dif["mean"].values[0], 
+            ax.bar(maximo_dif.index, maximo_dif["mean"].values, 
                         color="red", label="max dif: " + str(maximo_dif["id_salidas"].values[0]))
             ax.legend()
             ax.set_xlabel("Barrios")
@@ -554,12 +559,17 @@ def plot_stats_by_seasons(df):
             
             df_stats.Latitud_salidas = df_stats.Latitud_salidas.astype("float64")
             df_stats.Longitud_salidas = df_stats.Longitud_salidas.astype("float64")
-                    
+            
+            cmap = plt.cm.get_cmap(cmaps[i])     # mapa de colores
+            norm = plt.Normalize(df_stats["mean"].min(), df_stats["mean"].max()) # Normalizar los valores para el mapa de colores
+            
             ax.scatter(
                 x = df_stats["Latitud_salidas"],
                 y = df_stats["Longitud_salidas"],
-                cmap = cmap,
                 s = df_stats["mean"],
+                c = df_stats["mean"],
+                cmap = cmap,
+                norm = norm,
                 alpha = 0.8
             )
             ax.set_xlabel("Latitud")
