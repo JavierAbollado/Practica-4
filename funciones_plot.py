@@ -207,9 +207,7 @@ def plot_stats(df):
 
         ax = fig.add_subplot(f, c, 2*i + 2)
         
-        # LOS PUTOS TIPOS ME HAN MATADO! al parecer al leer el csv no se guardaba en formato numérico y 
-        # no los entendía aunque aparentemente estaban bien... Hay que preprocesarlos a un tipo float.
-        # RECORDAR QUITAR ESTE COMENTARIO ;)
+        
         df_stats.Latitud_salidas = df_stats.Latitud_salidas.astype("float64")
         df_stats.Longitud_salidas = df_stats.Longitud_salidas.astype("float64")
                 
