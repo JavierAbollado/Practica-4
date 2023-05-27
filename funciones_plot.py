@@ -480,10 +480,10 @@ def plot_stats_by_seasons(df):
         # separar en estaciones
         names = ["Primavera", "Verano", "Otoño", "Invierno"]
         df_seasons = [
-                df2.filter(df2.month >= 3  & df2.month <= 6), 
-                df2.filter(df2.month >= 7  & df2.month <= 9), 
-                df2.filter(df2.month >= 10 & df2.month <= 12), 
-                df2.filter(df2.month >= 1  & df2.month <= 2)
+                df2.filter(df2.month >= 3).filter(df2.month <= 6), 
+                df2.filter(df2.month >= 7).filter(df2.month <= 9), 
+                df2.filter(df2.month >= 10).filter(df2.month <= 12), 
+                df2.filter(df2.month >= 1).filter(df2.month <= 2)
         ] 
 
         for i in range(4):
