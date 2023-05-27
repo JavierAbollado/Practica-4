@@ -17,34 +17,39 @@ def preprocess_dates(df):
     return df_new
 
 
-def preprocess_ids(df, spark):
-    
-    data_geo  = "datos/bases_bicimad.csv"
-    
+def preprocess_ids(df, df_geo):
+        
     # cambiar los ids de las estaciones por el barrio respectivo
-    df_geo  = spark.read.csv(data_geo, header=True)\
-                            .select("Número", "Barrio")\
+    df_geo1  = df_geo.select("Número", "Barrio")\
                                 .withColumnRenamed("Número", "idplug_station")\
                                 .withColumnRenamed("Barrio", "id_llegadas")
-    df_geo2 = df_geo.withColumnRenamed("idplug_station", "idunplug_station")\
+    df_geo2 = df_geo1.withColumnRenamed("idplug_station", "idunplug_station")\
                                 .withColumnRenamed("id_llegadas", "id_salidas")
 
-    df_new = df.join(df_geo, on="idplug_station").join(df_geo2, on="idunplug_station")\
+    df_new = df.join(df_geo1, on="idplug_station").join(df_geo2, on="idunplug_station")\
                             .drop("idplug_station", "idunplug_station", "idplug_base", "idunplug_base")
     
     # añadir la geolocalización de los barrios
-    df_geo = spark.read.csv(data_geo, header=True)\
-                            .select("Barrio", "Latitud", "Longitud")\
+    df_geo1 = df_geo.select("Barrio", "Latitud", "Longitud")\
                                 .withColumnRenamed("Barrio", "id_salidas")\
                                 .withColumnRenamed("Latitud", "Latitud_salidas")\
                                 .withColumnRenamed("Longitud", "Longitud_salidas")
     
-    df_geo2 = df_geo.withColumnRenamed("id_salidas", "id_llegadas")\
+    df_geo2 = df_geo1.withColumnRenamed("id_salidas", "id_llegadas")\
                                 .withColumnRenamed("Latitud_salidas", "Latitud_llegadas")\
                                 .withColumnRenamed("Longitud_salidas", "Longitud_llegadas")
     
-    df_new = df_new.join(df_geo, on="id_salidas").join(df_geo2, on="id_llegadas")
+    df_new = df_new.join(df_geo1, on="id_salidas").join(df_geo2, on="id_llegadas")
     
+    return df_new
+
+# resumen de los preprocesamientos
+# Argumentos:
+# 1) df = df = spark.read.json(data_path) 
+# 2) df_geo = spark.read.csv(data_geo_path, header=True)
+def preprocess(df, df_geo):
+    df_new = preprocess_dates(df)
+    df_new = preprocess_ids(df, df_geo)
     return df_new
 
 
