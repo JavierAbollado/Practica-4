@@ -17,7 +17,7 @@ def preprocess_dates(df):
     return df_new
 
 
-def preprocess_ids(df):
+def preprocess_ids(df, spark):
     
     data_geo  = "datos/bases_bicimad.csv"
     
