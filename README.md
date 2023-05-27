@@ -21,7 +21,14 @@
 
 ## Tema elegido <a name=id1.1> </a>
 
-Estudiaremos la demanda de bicicletas agrupando por barrios y los movimientos de ellas entre los distintos barrios. Además veremos el crecimiento de bicimad a lo largo del tiempo. También miraremos como cambia la demanda en función de los días de la semana. 
+# La demanda del servicio de bicimad y las circunstancias que tienen un efecto sobre ella
+
+* Cuántas salidas y entradas de bicicletas hay por barrios.
+* Cómo afecta el día de la semana al uso de biciMad. 
+* Salidas menos entradas para ver el uso porcentual por barrio.
+* La máxima demanda de bicicletas en un barrio.
+* Las conexiones mas usuales entre las distintas estaciones
+* El crecimiento de la demanda del servicio a lo largo del tiempo. 
  
 
 ## Ideas <a name=id1.2> </a>
