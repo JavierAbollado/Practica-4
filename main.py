@@ -389,74 +389,6 @@ def plot_stats_by_weekends(df, years=None):
         plt.show()
 
 
-def plot_diferencias_entrada_salida_por_barrios(df, years=None):
-        
-    years = get_years(df) if years == None else years
-    
-    # get keys : id - geolocalización
-    df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])\
-                                .withColumnRenamed("id_salidas", "id")\
-                                .withColumnRenamed("Latitud_salidas", "Latitud")\
-                                .withColumnRenamed("Longitud_salidas", "Longitud")\
-    
-    for year in years:
-        
-        # sacar los datos de llegadas y salidas
-        df_salidas = df.filter(df.year == year).groupBy('id_salidas').count()\
-                                        .withColumnRenamed("id_salidas", "id")\
-                                        .withColumnRenamed("count", "n_salidas")\
-                                        .join(df_geo, "id", "left")\
-                                        .orderBy("id")
-        df_llegadas = df.filter(df.year == year).groupBy('id_llegadas').count()\
-                                        .withColumnRenamed("id_llegadas", "id")\
-                                        .withColumnRenamed("count", "n_llegadas")\
-                                        .join(df_geo, "id", "left")\
-                                        .orderBy("id")
-        
-        df_total = df_salidas.join(df_llegadas, "id")
-        df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_llegadas"))\
-                                                                                                    .toPandas()
-        
-        df_total.Latitud = df_total.Latitud.astype("float64")
-        df_total.Longitud = df_total.Longitud.astype("float64")
-        df_total.diferencia = df_total.diferencia.astype("float64")
-        
-        print(df_total.shape)
-
-        # PLOT IZQUIERDO
-        # --------------
-                
-        df_total.plot.bar(
-                x = "id",
-                y = ["n_salidas", "n_llegadas"],
-                color = ["red", "green"],
-                xlabel = "Barrios",
-                title = f"Salidas vs Llegadas\n--{year}--"
-        )
-
-        
-        # PLOT DERECHO
-        # ------------
-
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
-                
-        ax.scatter(
-            x = df_total["Latitud"],
-            y = df_total["Longitud"],
-            c = df_total["diferencia"],
-            s = df_total["diferencia"],
-            alpha = 0.8
-        )
-        ax.set_xlabel("Latitud")
-        ax.set_ylabel("Longitud")
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title(f"Diferencias entre salidas y llegadas\n--{year}--")
-
-
-        plt.show()
-
 
 
 #Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
@@ -581,6 +513,129 @@ def plot_stats_by_seasons(df, years=None):
             # --------------
 
         plt.show()
+
+        
+
+
+
+def plot_diferencias_entrada_salida_por_barrios(df, years=None):
+        
+    years = get_years(df) if years == None else years
+    
+    # get keys : id - geolocalización
+    df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])\
+                                .withColumnRenamed("id_salidas", "id")\
+                                .withColumnRenamed("Latitud_salidas", "Latitud")\
+                                .withColumnRenamed("Longitud_salidas", "Longitud")\
+    
+    for year in years:
+        
+        # sacar los datos de llegadas y salidas
+        df_salidas = df.filter(df.year == year).groupBy('id_salidas').count()\
+                                        .withColumnRenamed("id_salidas", "id")\
+                                        .withColumnRenamed("count", "n_salidas")\
+                                        .orderBy("id")
+        df_llegadas = df.filter(df.year == year).groupBy('id_llegadas').count()\
+                                        .withColumnRenamed("id_llegadas", "id")\
+                                        .withColumnRenamed("count", "n_llegadas")\
+                                        .orderBy("id")
+        
+        # unimos salidas y llegadas y añadimos la columna "diferencia" (resta de ambas)
+        df_total = df_salidas.join(df_llegadas, "id").join(df_geo, "id", "left")
+        df_total = df_total.withColumn("diferencia", 
+                            functions.col("n_salidas") - functions.col("n_llegadas"))\
+                                                                                .toPandas()
+        
+        # creamos do scolumnas separadas para ver dónde hay más salidas que llegadas y viceversa
+        df_total["mas_salidas"] = df_total["diferencia"].apply(lambda x : max(x, 0))
+        df_total["mas_llegadas"] = df_total["diferencia"].apply(lambda x : max(-x, 0))
+        
+        # cambiamos los tipos de datos para que se puedan interpretar
+        df_total.Latitud = df_total.Latitud.astype("float64")
+        df_total.Longitud = df_total.Longitud.astype("float64")
+        
+        fig = plt.figure(figsize=(15,5))
+
+#        # PLOT IZQUIERDO
+#        # --------------
+#        
+#        ax = fig.add_subplot(131)
+#                
+#        ax.bar(
+#            df_total["id"],
+#            df_total["n_salidas"],
+#            color = "red",
+#            label="salidas"
+#        )
+#        
+#        ax.bar(
+#            df_total["id"],
+#            df_total["n_llegadas"],
+#            color = "grey",
+#            label = "llegadas"
+#        )
+#        
+#        ax.set_xticks([])
+#        ax.set_yticks([])
+#        ax.set_xlabel("Barrios")
+#        ax.set_title(f"Salidas vs Llegadas\n--{year}--")
+#        ax.legend()
+
+        
+        # PLOT DERECHO (Creo que voy a dejar solo este)
+        # ------------
+        
+        ax = fig.add_subplot(111)
+        
+        # PLOT : más salidas
+        
+        cmap = plt.cm.get_cmap("Reds")     # mapa de colores
+        norm = plt.Normalize(df_total["mas_salidas"].min(), df_total["mas_salidas"].max()) # Normalizar los valores para el mapa de colores
+            
+        scatter = ax.scatter(
+            x = df_total["Latitud"],
+            y = df_total["Longitud"],
+            s = df_total["mas_salidas"],
+            c = df_total["mas_salidas"],
+            cmap = cmap,
+            norm = norm,
+            alpha = 0.8,
+            label = "más salidas"
+        )
+        
+        colorbar = fig.colorbar(scatter)
+        colorbar.set_label("más salidas")
+        
+        # PLOT : más llegadas
+   
+        cmap = plt.cm.get_cmap("Greens")     # mapa de colores
+        norm = plt.Normalize(df_total["mas_llegadas"].min(), df_total["mas_llegadas"].max()) # Normalizar los valores para el mapa de colores
+            
+        scatter = ax.scatter(
+            x = df_total["Latitud"],
+            y = df_total["Longitud"],
+            s = df_total["mas_llegadas"],
+            c = df_total["mas_llegadas"],
+            cmap = cmap,
+            norm = norm,
+            alpha = 0.8,
+            label = "más llegadas"
+        )
+        
+        colorbar = fig.colorbar(scatter)
+        colorbar.set_label("más llegadas")
+        
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Diferencias entre salidas y llegadas\n--{year}--")
+
+
+        plt.show()
+
+        
+        
 
 
 if __name__ == "__main__":
