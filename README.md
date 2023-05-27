@@ -21,7 +21,7 @@
 
 ## Tema elegido <a name=id1.1> </a>
 
-# La demanda del servicio de bicimad y las circunstancias que tienen un efecto sobre ella
+### La demanda del servicio de bicimad y las circunstancias que tienen un efecto sobre ella
 
 * Cuántas salidas y entradas de bicicletas hay por barrios.
 * Cómo afecta el día de la semana al uso de biciMad. 
