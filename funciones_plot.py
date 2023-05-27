@@ -49,7 +49,7 @@ def preprocess_ids(df, df_geo):
 # 2) df_geo = spark.read.csv(data_geo_path, header=True)
 def preprocess(df, df_geo):
     df_new = preprocess_dates(df)
-    df_new = preprocess_ids(df, df_geo)
+    df_new = preprocess_ids(df_new, df_geo)
     return df_new
 
 
