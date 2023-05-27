@@ -581,3 +581,26 @@ def plot_stats_by_seasons(df, years=None):
             # --------------
 
         plt.show()
+
+
+if __name__ == "__main__":
+
+    import sys
+
+    if len(sys.argv) > 2:
+        geo_path = sys.argv[1]
+        bicimad_path = sys.argv[2]
+    else:
+        print("main.py <path to geo csv> <path to dataframe>")
+        sys.exit(0)
+
+    from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+
+    df = spark.read.json(bicimad_path)
+    df_geo = spark.read.csv(geo_path, header=True)
+
+    df_new = preprocess(df, df_geo)
+
+    # ejecutar los plots que queráis
