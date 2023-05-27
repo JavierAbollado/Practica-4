@@ -83,7 +83,7 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
         df_barrio = df
     
     #Si no introducimos un año en la funcion coge todos los años
-    years = years if years != None else get_years(df)
+    years = get_years(df) if years == None else years
     
     df_plot = None
     
@@ -109,9 +109,9 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
     
 
 #Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
-def plot_analisys_by_year(df):
+def plot_analisys_by_year(df, years=None):
     
-    years = get_years(df)
+    years = get_years(df) if years == None else years
     
     df_plot = None
     
@@ -137,11 +137,9 @@ def plot_analisys_by_year(df):
 
 #Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
 # un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-def plot_stats(df):
-    # import matplotlib.pyplot as plt
-    # import pandas as pd
-    # import numpy as np
-    years = get_years(df)
+def plot_stats(df, years=None):
+    
+    years = get_years(df) if years == None else years
     
     # get keys : id - geolocalización
     df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])
@@ -239,9 +237,9 @@ def plot_stats(df):
 #Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
 # un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
 #Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
-def plot_stats_by_weekends(df):
+def plot_stats_by_weekends(df, years=None):
     
-    years = get_years(df)
+    years = get_years(df) if years == None else years
     
     # get keys : id - geolocalización
     df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])
@@ -391,9 +389,9 @@ def plot_stats_by_weekends(df):
         plt.show()
 
 
-def plot_diferencias_entrada_salida_por_barrios(df):
+def plot_diferencias_entrada_salida_por_barrios(df, years=None):
         
-    years = get_years(df)
+    years = get_years(df) if years == None else years
     
     # get keys : id - geolocalización
     df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])\
@@ -415,13 +413,15 @@ def plot_diferencias_entrada_salida_por_barrios(df):
                                         .join(df_geo, "id", "left")\
                                         .orderBy("id")
         
-        df_total = df_salidas.join(df_llegadas, "id", "inner")
+        df_total = df_salidas.join(df_llegadas, "id")
         df_total = df_total.withColumn("diferencia", functions.col("n_salidas") - functions.col("n_llegadas"))\
                                                                                                     .toPandas()
         
         df_total.Latitud = df_total.Latitud.astype("float64")
         df_total.Longitud = df_total.Longitud.astype("float64")
         df_total.diferencia = df_total.diferencia.astype("float64")
+        
+        print(df_total.shape)
 
         # PLOT IZQUIERDO
         # --------------
@@ -462,9 +462,9 @@ def plot_diferencias_entrada_salida_por_barrios(df):
 #Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
 # un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
 #Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
-def plot_stats_by_seasons(df):
+def plot_stats_by_seasons(df, years=None):
     
-    years = get_years(df)
+    years = get_years(df) if years == None else years
     
     # get keys : id - geolocalización
     df_geo = df.select("id_salidas", "Latitud_salidas", "Longitud_salidas").dropDuplicates(["id_salidas"])
