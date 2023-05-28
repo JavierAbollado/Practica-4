@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 from pyspark.sql.functions import dayofweek, dayofyear, dayofmonth, weekofyear, month, year
 from pyspark.sql import functions # usaremos -> mean, stddev, max, min, col
-
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -125,9 +123,7 @@ def plot_stats(df, years=None):
     
     # nº de columnas = 2 -> una para las gráficas y otro con geolocalizaciones y algún atributo
     c = 2
-    
-    # crear plot
-    fig = plt.figure(figsize=(15,5*f))
+
     
     for i, year in enumerate(years):
         
@@ -171,8 +167,6 @@ def plot_stats_by_weekends(df, years=None):
     for year in years:
         
         # crear plot
-        fig = plt.figure(figsize=(15,5*2))
-        f, c = 2, 2
     
         
         df2 = df.filter(df.year == year)\
@@ -239,10 +233,6 @@ def plot_stats_by_seasons(df, years=None):
     
     for year in years:
         
-        # crear plot
-        f, c = 4, 2
-        fig = plt.figure(figsize=(15,5*f))
-        fig.suptitle(f'Estudio por estaciones\n-- {year} --')
     
         df2 = df.filter(df.year == year)\
                     .groupBy("id_salidas", "month").count()\
