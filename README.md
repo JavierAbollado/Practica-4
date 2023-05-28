@@ -12,13 +12,16 @@ Integrantes:
 
 El repositorio cuenta con los siguientes archivos y carpetas
 
-* carpeta .ipynb_checkpoints:  contiene los checkpoints de los ipynb con los que hemos estado trabajando
-* carpeta datos: contiene los samples que utilizamos en local para realizar entrega.ipynb 
-* carpeta images: contiene la portada 
-* entrega.pdf: memoria completa
+* **entrega.pdf: memoria completa**
 * entrega.ipynb: es el jupyter que contiene datos de la memoria y el proceso seguido, así como detalles de código a la hora de realizar el trabajo.
 * main.py: es el script con todas las funciones de la memoria. Lo utilizamos para importar las funciones que vamos a utilizar a entrega.ipynb.
 * maincluster.py : es el script simplificado de main.py que utilizamos para ejecutar en el cluster del wild 
+
+auxiliares
+
+* carpeta .ipynb_checkpoints:  contiene los checkpoints de los ipynb con los que hemos estado trabajando
+* carpeta datos: contiene los samples que utilizamos en local para realizar entrega.ipynb 
+* carpeta images: contiene la portada 
 
 
 ## Datos que nos encontramos <a name=id1.4> </a>
