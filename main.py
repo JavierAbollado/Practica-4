@@ -517,7 +517,8 @@ def plot_stats_by_seasons(df, years=None):
         
 
 
-
+#Dibuja un gráfico de puntos de los barrios y pinta en verde los barrios en los que entran más bicis y en rojo los que salen mas bicis
+#El tamaño de los puntos va en funcón de la diferencia entre entradas y salidas de las bicicletas.
 def plot_diferencias_entrada_salida_por_barrios(df, years=None):
         
     years = get_years(df) if years == None else years
