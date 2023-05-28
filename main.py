@@ -556,35 +556,6 @@ def plot_diferencias_entrada_salida_por_barrios(df, years=None):
         df_total.Longitud = df_total.Longitud.astype("float64")
         
         fig = plt.figure(figsize=(15,5))
-
-#        # PLOT IZQUIERDO
-#        # --------------
-#        
-#        ax = fig.add_subplot(131)
-#                
-#        ax.bar(
-#            df_total["id"],
-#            df_total["n_salidas"],
-#            color = "red",
-#            label="salidas"
-#        )
-#        
-#        ax.bar(
-#            df_total["id"],
-#            df_total["n_llegadas"],
-#            color = "grey",
-#            label = "llegadas"
-#        )
-#        
-#        ax.set_xticks([])
-#        ax.set_yticks([])
-#        ax.set_xlabel("Barrios")
-#        ax.set_title(f"Salidas vs Llegadas\n--{year}--")
-#        ax.legend()
-
-        
-        # PLOT DERECHO (Creo que voy a dejar solo este)
-        # ------------
         
         ax = fig.add_subplot(111)
         
