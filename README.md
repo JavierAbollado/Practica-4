@@ -1,5 +1,12 @@
 
 <img align="right" src="images/01-bicimad-escena-principal.gif" width="60%"/>
+#Practica 4 de spark
+
+Integrantes:
+* David Parro Plaza
+* Francisco Javier Abollado
+* Juan Álvarez San Romualdo
+
 
 # Índice 
 
