@@ -61,8 +61,7 @@ def get_random_barrio(df):
 def get_years(df):
     # Guardar una lista con todos los años disponibles del DataFrame -> no serán más de 2 / 3 valores 
     # por lo que aunque parezca que hay mucho paso a pandas y a listas, la operación no es costosa
-    years = df.select("year").distinct().toPandas()["year"].to_list()
-    years = list(map(str, years)) # pasarlo a tipo string
+    years = df.select("year").distinct().rdd.map(lambda x: str(x[0])).collect()
     return years
 
 
@@ -89,7 +88,7 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
         df_year = df_barrio.filter(df.year == year)\
                             .groupBy("dayofweek").count()\
                                 .withColumnRenamed("count", year)
-        df_year.show(20)
+        df_year.show()
     
 
 #Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
@@ -133,20 +132,8 @@ def plot_stats(df, years=None):
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left").toPandas()
-        
-
-        # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
-        # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
-        # gráfica (los valores reales serán proporcionales a los resultados)
-        df_stats["std"] = df_stats["std"] / df_stats["mean"] * df_stats["mean"].max()
-        
-        # Columna con las diferencias (relativas) máximo - mínimo
-        df_stats["dif"] = (df_stats["max"] - df_stats["min"]) / df_stats["mean"]
-        
-        maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
-        maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
-        return df_stats
+        ).join(df_geo, "id_salidas", "left")
+        return df_stats.show()
 
 
 
@@ -182,38 +169,20 @@ def plot_stats_by_weekends(df, years=None):
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left").toPandas()
+        ).join(df_geo, "id_salidas", "left")
         
         df_stats_no = df_no.groupBy("id_salidas").agg(
                 functions.mean("count").alias("mean"), 
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left").toPandas()
-        
-
-        # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
-        # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
-        # gráfica (los valores reales serán proporcionales a los resultados)
-        df_stats_si["std"] = df_stats_si["std"] / df_stats_si["mean"] * df_stats_si["mean"].max()
-        df_stats_no["std"] = df_stats_no["std"] / df_stats_no["mean"] * df_stats_no["mean"].max()
-        
-        # Columna con las diferencias (relativas) máximo - mínimo
-        df_stats_si["dif"] = (df_stats_si["max"] - df_stats_si["min"]) / df_stats_si["mean"]
-        df_stats_no["dif"] = (df_stats_no["max"] - df_stats_no["min"]) / df_stats_no["mean"]
-        
-        # maximos
-        maximo_std_si = df_stats_si[df_stats_si["std"] == df_stats_si["std"].max()]
-        maximo_dif_si = df_stats_si[df_stats_si["dif"] == df_stats_si["dif"].max()]
-        
-        maximo_std_no = df_stats_no[df_stats_no["std"] == df_stats_no["std"].max()]
-        maximo_dif_no = df_stats_no[df_stats_no["dif"] == df_stats_no["dif"].max()]
+        ).join(df_geo, "id_salidas", "left")
 
         for i in range(2):
             if i == 0:
-                print(df_stats_si)
+                df_stats_si.show()
             else:
-                print(df_stats_no)
+                df_stats_no.show()
         return None
 
 
@@ -259,28 +228,9 @@ def plot_stats_by_seasons(df, years=None):
                     functions.stddev("count").alias('std'),
                     functions.min("count").alias('min'),
                     functions.max("count").alias('max'),
-            ).join(df_geo, "id_salidas", "left").toPandas()
-            
-            n = len(df_stats)
-            
-            if n == 0:
-                # no tenemos datos de esta estación
-                continue
+            ).join(df_geo, "id_salidas", "left")
 
-            # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
-            # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
-            # gráfica (los valores reales serán proporcionales a los resultados)
-            df_stats["std"] = df_stats["std"] / df_stats["mean"] * df_stats["mean"].max()
-            
-            # Columna con las diferencias (relativas) máximo - mínimo
-            df_stats["dif"] = (df_stats["max"] - df_stats["min"]) / df_stats["mean"]
-            
-            # maximos
-            maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
-            maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
-            
-            print(df_stats)
-            return None
+            return df_stats.show()
 
         
 
@@ -311,16 +261,7 @@ def plot_diferencias_entrada_salida_por_barrios(df, years=None):
         # unimos salidas y llegadas y añadimos la columna "diferencia" (resta de ambas)
         df_total = df_salidas.join(df_llegadas, "id").join(df_geo, "id", "left")
         df_total = df_total.withColumn("diferencia", 
-                            functions.col("n_salidas") - functions.col("n_llegadas"))\
-                                                                                .toPandas()
-        
-        # creamos do scolumnas separadas para ver dónde hay más salidas que llegadas y viceversa
-        df_total["mas_salidas"] = df_total["diferencia"].apply(lambda x : max(x, 0))
-        df_total["mas_llegadas"] = df_total["diferencia"].apply(lambda x : max(-x, 0))
-        
-        # cambiamos los tipos de datos para que se puedan interpretar
-        df_total.Latitud = df_total.Latitud.astype("float64")
-        df_total.Longitud = df_total.Longitud.astype("float64")
+                            functions.col("n_salidas") - functions.col("n_llegadas"))
         
         print(df_total)
         return None
