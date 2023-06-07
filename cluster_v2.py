@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Created on Wed Jun  7 21:55:17 2023
+
+@author: david
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from pyspark.sql.functions import dayofweek, dayofyear, dayofmonth, weekofyear, month, year
 from pyspark.sql import functions # usaremos -> mean, stddev, max, min, col
 
-#Separa las fechas por año, semana y día 
+import matplotlib.pyplot as plt
+import numpy as np
+
 def preprocess_dates(df):
+    """
+    Separa las fechas por año, semana y día 
+    """
         
     df_new = df.withColumn("dayofweek", dayofweek(df.unplug_hourTime.getItem("$date")))\
             .withColumn("month", month(df.unplug_hourTime.getItem("$date")))\
@@ -40,33 +53,46 @@ def preprocess_ids(df, df_geo):
     
     return df_new
 
-# resumen de los preprocesamientos
-# Argumentos:
-# 1) df = df = spark.read.json(data_path) 
-# 2) df_geo = spark.read.csv(data_geo_path, header=True)
+
 def preprocess(df, df_geo):
+    """
+    resumen de los preprocesamientos
+    Argumentos:
+    1) df = df = spark.read.json(data_path) 
+    2) df_geo = spark.read.csv(data_geo_path, header=True) 
+    """
     df_new = preprocess_dates(df)
     df_new = preprocess_ids(df_new, df_geo)
     return df_new
 
 
-#Devuelve un barrio aleatorio
+# Serán pocos valores (el nº de barrios) por lo que aunque parezca que hay mucho paso 
+# a pandas y a listas, la operación no es costosa. De todas formas lo suyo es que seleccionemos nosotros
+# uno manualmente
 def get_random_barrio(df):
-    # Serán pocos valores (el nº de barrios) por lo que aunque parezca que hay mucho paso 
-    # a pandas y a listas, la operación no es costosa. De todas formas lo suyo es que seleccionemos nosotros
-    # uno manualmente
-    return "06-03 CASTILLEJOS"
+    """
+    Devuelve un barrio aleatorio 
+    """
+    return np.random.choice(df.select("id_salidas").distinct().toPandas()["id_salidas"].to_list())
 
-#Devuelve los años
+
 def get_years(df):
+    """
+    Devuelve los años
+    """
     # Guardar una lista con todos los años disponibles del DataFrame -> no serán más de 2 / 3 valores 
     # por lo que aunque parezca que hay mucho paso a pandas y a listas, la operación no es costosa
-    years = df.select("year").distinct().rdd.map(lambda x: str(x[0])).collect()
+    years = df.select("year").distinct().toPandas()["year"].to_list()
+    years = list(map(str, years)) # pasarlo a tipo string
     return years
 
 
-#Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
+
 def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == True -> estudio uniendo todos los barrios
+    """
+    Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
+    """  
+    
     
     #Si total es true entonces hacemos un estudio de todos los barrios del Dataframe
     if not total:
@@ -88,11 +114,27 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
         df_year = df_barrio.filter(df.year == year)\
                             .groupBy("dayofweek").count()\
                                 .withColumnRenamed("count", year)
-        df_year.show()
+        if df_plot == None:
+            df_plot = df_year
+        else:
+            df_plot = df_plot.join(df_year, on="dayofweek")
+    
+    # Ordenar temporalmente (dayofweek) y luego hacemos un plot de todos los años
+    ss = f" del barrio:\n{barrio}" if not total else ""
+    df_plot.orderBy("dayofweek").toPandas().plot.bar(
+            x = "dayofweek", 
+            y = years,
+            title = f"Visualización de los movimientos\n por días de la semana{ss}",
+            ylabel="nº de movimientos totales",
+            xlabel=""
+    ).set_xticklabels(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
     
 
-#Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
+
 def plot_analisys_by_year(df, years=None):
+    """
+    Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
+    """
     
     years = get_years(df) if years == None else years
     
@@ -103,12 +145,27 @@ def plot_analisys_by_year(df, years=None):
         df_year = df.filter(df.year == year)\
                             .groupBy("weekofyear").count()\
                                 .withColumnRenamed("count", year)
-        df_year.show()
+        if df_plot == None:
+            df_plot = df_year
+        else:
+            df_plot = df_plot.join(df_year, on="weekofyear")
+    
+    # ordenar temporalmente (weekofyear) y luego hacer un plot de todos los años
+    df_plot.orderBy("weekofyear").toPandas().plot(
+            x = "weekofyear", 
+            y = years,
+            title = "Visualización global\nde los movimientos de las bicis",
+            xlabel="semana",
+            ylabel="nº de movimientos"
+    )
 
 
-#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
-# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+
 def plot_stats(df, years=None):
+    """
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+    un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    """
     
     years = get_years(df) if years == None else years
     
@@ -120,7 +177,9 @@ def plot_stats(df, years=None):
     
     # nº de columnas = 2 -> una para las gráficas y otro con geolocalizaciones y algún atributo
     c = 2
-
+    
+    # crear plot
+    fig = plt.figure(figsize=(15,5*f))
     
     for i, year in enumerate(years):
         
@@ -132,16 +191,85 @@ def plot_stats(df, years=None):
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left")
-        return df_stats.show()
+        ).join(df_geo, "id_salidas", "left").toPandas()
+        
+
+        # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
+        # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
+        # gráfica (los valores reales serán proporcionales a los resultados)
+        df_stats["std"] = df_stats["std"] / df_stats["mean"] * df_stats["mean"].max()
+        
+        # Columna con las diferencias (relativas) máximo - mínimo
+        df_stats["dif"] = (df_stats["max"] - df_stats["min"]) / df_stats["mean"]
+        
+        maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
+        maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
+
+        # PLOT IZQUIERDO
+        # --------------
+        # Tendremos:
+        #  - BarPlot de los valores medios (en gris transparente para después aprecias las std)
+        #  - LinePlot de las std (relativa) en rojo
+        #  - ScatterPlot del valor máximo de : relative std -> para después analizarlo
+        
+        ax = fig.add_subplot(f, c, 2*i + 1)
+
+        n = df_stats.shape[0]
+        x = range(n)
+        
+        ax.plot(x, df_stats["std"].values, "m-", label="std")
+        ax.bar(x, df_stats["mean"].values, color="grey", alpha=0.8, label="mean")
+        ax.bar(maximo_std.index[0], maximo_std["mean"].values[0], 
+                   color="m", label="max std: " + str(maximo_std["id_salidas"].values[0]))
+        ax.bar(maximo_dif.index[0], maximo_dif["mean"].values[0], 
+                    color="red", label="max dif: " + str(maximo_dif["id_salidas"].values[0]))
+        ax.legend()
+        ax.set_xlabel("Barrios")
+        ax.set_ylabel("Usos de las bicis")
+        ax.set_xticks([])
+        ax.set_title(f"Datos estadísticos sobre los barrios\n--{year}--")
+
+        
+        # PLOT DERECHO
+        # ------------
+        # Tendremos un plot con las geolocalizaciones con los siguientes datos implícitos:
+        #  - Tamaño del punto: indica el la media de uso en esa zona (cuanto más grande más uso)
+        #  - Color: también se clasifican por la media de uso (los mismas colores indican mismas medias)
+
+        ax = fig.add_subplot(f, c, 2*i + 2)
+        
+        
+        df_stats.Latitud_salidas = df_stats.Latitud_salidas.astype("float64")
+        df_stats.Longitud_salidas = df_stats.Longitud_salidas.astype("float64")
+                
+        ax.scatter(
+            x = df_stats["Latitud_salidas"],
+            y = df_stats["Longitud_salidas"],
+            c = df_stats["mean"],
+            s = df_stats["mean"],
+            alpha = 0.8
+        )
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Datos geográficos sobre los barrios\n--{year}--")
+
+        
+    
+    plt.savefig('plot_stats.png')
 
 
 
 
-#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
-# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-#Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
+
 def plot_stats_by_weekends(df, years=None):
+    """
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+    un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
+    """
+    
     
     years = get_years(df) if years == None else years
     
@@ -152,6 +280,8 @@ def plot_stats_by_weekends(df, years=None):
     for year in years:
         
         # crear plot
+        fig = plt.figure(figsize=(15,5*2))
+        f, c = 2, 2
     
         
         df2 = df.filter(df.year == year)\
@@ -169,28 +299,137 @@ def plot_stats_by_weekends(df, years=None):
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left")
+        ).join(df_geo, "id_salidas", "left").toPandas()
         
         df_stats_no = df_no.groupBy("id_salidas").agg(
                 functions.mean("count").alias("mean"), 
                 functions.stddev("count").alias('std'),
                 functions.min("count").alias('min'),
                 functions.max("count").alias('max'),
-        ).join(df_geo, "id_salidas", "left")
+        ).join(df_geo, "id_salidas", "left").toPandas()
+        
 
-        for i in range(2):
-            if i == 0:
-                df_stats_si.show()
-            else:
-                df_stats_no.show()
-        return None
+        # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
+        # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
+        # gráfica (los valores reales serán proporcionales a los resultados)
+        df_stats_si["std"] = df_stats_si["std"] / df_stats_si["mean"] * df_stats_si["mean"].max()
+        df_stats_no["std"] = df_stats_no["std"] / df_stats_no["mean"] * df_stats_no["mean"].max()
+        
+        # Columna con las diferencias (relativas) máximo - mínimo
+        df_stats_si["dif"] = (df_stats_si["max"] - df_stats_si["min"]) / df_stats_si["mean"]
+        df_stats_no["dif"] = (df_stats_no["max"] - df_stats_no["min"]) / df_stats_no["mean"]
+        
+        # maximos
+        maximo_std_si = df_stats_si[df_stats_si["std"] == df_stats_si["std"].max()]
+        maximo_dif_si = df_stats_si[df_stats_si["dif"] == df_stats_si["dif"].max()]
+        
+        maximo_std_no = df_stats_no[df_stats_no["std"] == df_stats_no["std"].max()]
+        maximo_dif_no = df_stats_no[df_stats_no["dif"] == df_stats_no["dif"].max()]
+
+        # PLOT IZQUIERDO
+        # --------------
+        # Tendremos:
+        #  - BarPlot de los valores medios (en gris transparente para después aprecias las std)
+        #  - LinePlot de las std (relativa) en rojo
+        #  - ScatterPlot del valor máximo de : relative std -> para después analizarlo
+        
+        # --------------- ENTRE SEMANA ---------------
+        
+        ax = fig.add_subplot(f, c, 1)
+
+        n = df_stats_no.shape[0]
+        x = range(n)
+        
+        ax.plot(x, df_stats_no["std"].values, "m-", label="std")
+        ax.bar(x, df_stats_no["mean"].values, color="grey", alpha=0.8, label="mean")
+        ax.bar(maximo_std_no.index[0], maximo_std_no["mean"].values[0], 
+                   color="m", label="max std: " + str(maximo_std_no["id_salidas"].values[0]))
+        ax.bar(maximo_dif_no.index[0], maximo_dif_no["mean"].values[0], 
+                    color="red", label="max dif: " + str(maximo_dif_no["id_salidas"].values[0]))
+        ax.legend()
+        ax.set_xlabel("Barrios")
+        ax.set_ylabel("Usos de las bicis")
+        ax.set_xticks([])
+        ax.set_title(f"Datos estadísticos sobre los barrios\n--Entre semana : {year}--")
+        
+        # --------------- FIN DE SEMANA ---------------
+        
+        ax = fig.add_subplot(f, c, 3)
+
+        n = df_stats_si.shape[0]
+        x = range(n)
+        
+        ax.plot(x, df_stats_si["std"].values, "m-", label="std")
+        ax.bar(x, df_stats_si["mean"].values, color="grey", alpha=0.8, label="mean")
+        ax.bar(maximo_std_si.index[0], maximo_std_si["mean"].values[0], 
+                   color="m", label="max std: " + str(maximo_std_si["id_salidas"].values[0]))
+        ax.bar(maximo_dif_si.index[0], maximo_dif_si["mean"].values[0], 
+                    color="red", label="max dif: " + str(maximo_dif_si["id_salidas"].values[0]))
+        ax.legend()
+        ax.set_xlabel("Barrios")
+        ax.set_ylabel("Usos de las bicis")
+        ax.set_xticks([])
+        ax.set_title(f"Datos estadísticos sobre los barrios\n--Fines de semana : {year}--")
+
+        
+        # PLOT DERECHO
+        # ------------
+        # Tendremos un plot con las geolocalizaciones con los siguientes datos implícitos:
+        #  - Tamaño del punto: indica el la media de uso en esa zona (cuanto más grande más uso)
+        #  - Color: también se clasifican por la media de uso (los mismas colores indican mismas medias)
+
+        # --------------- ENTRE SEMANA ---------------
+
+        ax = fig.add_subplot(f, c, 2)
+        
+        df_stats_no.Latitud_salidas = df_stats_no.Latitud_salidas.astype("float64")
+        df_stats_no.Longitud_salidas = df_stats_no.Longitud_salidas.astype("float64")
+                
+        ax.scatter(
+            x = df_stats_no["Latitud_salidas"],
+            y = df_stats_no["Longitud_salidas"],
+            c = df_stats_no["mean"],
+            s = df_stats_no["mean"],
+            alpha = 0.8
+        )
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Datos geográficos sobre los barrios\n--Entre semana : {year}--")
+
+        # --------------- FIN DE SEMANA ---------------
+
+        ax = fig.add_subplot(f, c, 4)
+        
+        df_stats_si.Latitud_salidas = df_stats_si.Latitud_salidas.astype("float64")
+        df_stats_si.Longitud_salidas = df_stats_si.Longitud_salidas.astype("float64")
+                
+        ax.scatter(
+            x = df_stats_si["Latitud_salidas"],
+            y = df_stats_si["Longitud_salidas"],
+            c = df_stats_si["mean"],
+            s = df_stats_si["mean"],
+            alpha = 0.8
+        )
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Datos geográficos sobre los barrios\n--Fines de semana : {year}--")
+    
+        plt.savefig('plot_stats_by_weekend.png')
 
 
 
-#Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
-# un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-#Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
+
+
 def plot_stats_by_seasons(df, years=None):
+    """
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+    un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
+    """
     
     years = get_years(df) if years == None else years
     
@@ -200,6 +439,10 @@ def plot_stats_by_seasons(df, years=None):
     
     for year in years:
         
+        # crear plot
+        f, c = 4, 2
+        fig = plt.figure(figsize=(15,5*f))
+        fig.suptitle(f'Estudio por estaciones\n-- {year} --')
     
         df2 = df.filter(df.year == year)\
                     .groupBy("id_salidas", "month").count()\
@@ -228,15 +471,94 @@ def plot_stats_by_seasons(df, years=None):
                     functions.stddev("count").alias('std'),
                     functions.min("count").alias('min'),
                     functions.max("count").alias('max'),
-            ).join(df_geo, "id_salidas", "left")
+            ).join(df_geo, "id_salidas", "left").toPandas()
+            
+            n = len(df_stats)
+            
+            if n == 0:
+                # no tenemos datos de esta estación
+                continue
 
-            return df_stats.show()
+            # Cambiar la columna std por la relativa, ya que es la que nos interesa. 
+            # Luego multiplicamos por el valor medio máximo para que se aprecien los valores en la 
+            # gráfica (los valores reales serán proporcionales a los resultados)
+            df_stats["std"] = df_stats["std"] / df_stats["mean"] * df_stats["mean"].max()
+            
+            # Columna con las diferencias (relativas) máximo - mínimo
+            df_stats["dif"] = (df_stats["max"] - df_stats["min"]) / df_stats["mean"]
+            
+            # maximos
+            maximo_std = df_stats[df_stats["std"] == df_stats["std"].max()]
+            maximo_dif = df_stats[df_stats["dif"] == df_stats["dif"].max()]
+            
+            
+            # PLOT IZQUIERDO
+            # --------------
+            # Tendremos:
+            #  - BarPlot de los valores medios (en gris transparente para después aprecias las std)
+            #  - LinePlot de las std (relativa) en rojo
+            #  - ScatterPlot del valor máximo de : relative std -> para después analizarlo
+                
+            ax = fig.add_subplot(f, c, 2*i + 1)
+
+            x = range(n)
+            
+            ax.plot(x, df_stats["std"].values, "m-", label="std")
+            ax.bar(x, df_stats["mean"].values, color="grey", alpha=0.8, label="mean")
+            ax.bar(maximo_std.index, maximo_std["mean"].values, 
+                    color="m", label="max std: " + str(maximo_std["id_salidas"].values[0]))
+            ax.bar(maximo_dif.index, maximo_dif["mean"].values, 
+                        color="red", label="max dif: " + str(maximo_dif["id_salidas"].values[0]))
+            ax.legend()
+            ax.set_xlabel("Barrios")
+            ax.set_ylabel("Usos de las bicis")
+            ax.set_xticks([])
+            ax.set_title(f"Datos estadísticos sobre los barrios\n--{name} : {year}--")
+            
+            
+            # PLOT DERECHO
+            # ------------
+            # Tendremos un plot con las geolocalizaciones con los siguientes datos implícitos:
+            #  - Tamaño del punto: indica el la media de uso en esa zona (cuanto más grande más uso)
+            #  - Color: también se clasifican por la media de uso (los mismas colores indican mismas medias)
+
+            ax = fig.add_subplot(f, c, 2*i + 2)
+            
+            df_stats.Latitud_salidas = df_stats.Latitud_salidas.astype("float64")
+            df_stats.Longitud_salidas = df_stats.Longitud_salidas.astype("float64")
+            
+            cmap = plt.cm.get_cmap(cmaps[i])     # mapa de colores
+            norm = plt.Normalize(df_stats["mean"].min(), df_stats["mean"].max()) # Normalizar los valores para el mapa de colores
+            
+            ax.scatter(
+                x = df_stats["Latitud_salidas"],
+                y = df_stats["Longitud_salidas"],
+                s = df_stats["mean"],
+                c = df_stats["mean"],
+                cmap = cmap,
+                norm = norm,
+                alpha = 0.8
+            )
+            ax.set_xlabel("Latitud")
+            ax.set_ylabel("Longitud")
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_title(f"Datos geográficos sobre los barrios\n--{name} : {year}--")
+
+            # --------------
+
+        plt.savefig('stats_by_season.png')
 
         
 
 
 
 def plot_diferencias_entrada_salida_por_barrios(df, years=None):
+    """
+    Dibuja un gráfico de puntos de los barrios y pinta en verde los barrios en los que entran más bicis y en rojo los que salen mas bicis
+    El tamaño de los puntos va en funcón de la diferencia entre entradas y salidas de las bicicletas.
+    """
+
         
     years = get_years(df) if years == None else years
     
@@ -261,26 +583,83 @@ def plot_diferencias_entrada_salida_por_barrios(df, years=None):
         # unimos salidas y llegadas y añadimos la columna "diferencia" (resta de ambas)
         df_total = df_salidas.join(df_llegadas, "id").join(df_geo, "id", "left")
         df_total = df_total.withColumn("diferencia", 
-                            functions.col("n_salidas") - functions.col("n_llegadas"))
+                            functions.col("n_salidas") - functions.col("n_llegadas"))\
+                                                                                .toPandas()
         
-        print(df_total)
-        return None
-
+        # creamos do scolumnas separadas para ver dónde hay más salidas que llegadas y viceversa
+        df_total["mas_salidas"] = df_total["diferencia"].apply(lambda x : max(x, 0))
+        df_total["mas_llegadas"] = df_total["diferencia"].apply(lambda x : max(-x, 0))
         
+        # cambiamos los tipos de datos para que se puedan interpretar
+        df_total.Latitud = df_total.Latitud.astype("float64")
+        df_total.Longitud = df_total.Longitud.astype("float64")
         
+        fig = plt.figure(figsize=(15,5))
+        
+        ax = fig.add_subplot(111)
+        
+        # PLOT : más salidas
+        
+        cmap = plt.cm.get_cmap("Reds")     # mapa de colores
+        norm = plt.Normalize(df_total["mas_salidas"].min(), df_total["mas_salidas"].max()) # Normalizar los valores para el mapa de colores
+            
+        scatter = ax.scatter(
+            x = df_total["Latitud"],
+            y = df_total["Longitud"],
+            s = df_total["mas_salidas"],
+            c = df_total["mas_salidas"],
+            cmap = cmap,
+            norm = norm,
+            alpha = 0.8,
+            label = "más salidas"
+        )
+        
+        colorbar = fig.colorbar(scatter)
+        colorbar.set_label("más salidas")
+        
+        # PLOT : más llegadas
+   
+        cmap = plt.cm.get_cmap("Greens")     # mapa de colores
+        norm = plt.Normalize(df_total["mas_llegadas"].min(), df_total["mas_llegadas"].max()) # Normalizar los valores para el mapa de colores
+            
+        scatter = ax.scatter(
+            x = df_total["Latitud"],
+            y = df_total["Longitud"],
+            s = df_total["mas_llegadas"],
+            c = df_total["mas_llegadas"],
+            cmap = cmap,
+            norm = norm,
+            alpha = 0.8,
+            label = "más llegadas"
+        )
+        
+        colorbar = fig.colorbar(scatter)
+        colorbar.set_label("más llegadas")
+        
+        ax.set_xlabel("Latitud")
+        ax.set_ylabel("Longitud")
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(f"Diferencias entre salidas y llegadas\n--{year}--")
 
 
-if __name__ == "__main__":
+        plt.savefig('diferencia_salida_barrios.png')
 
+
+if __name__ == '__main__':
     import sys
 
     if len(sys.argv) > 1:
-        bicimad_path = sys.argv[1]
+        bicimad_path   = sys.argv[1]
+        lista_ficheros = sys.argv[2]
     else:
         print("main.py <path to geo csv> <path to dataframe>")
         sys.exit(0)
 
     from pyspark.sql import SparkSession
+
+    spark = SparkSession.builder.getOrCreate()
+    # "hdfs://master:9000/public/bicimad/201708_movements.json"
     url = 'hdfs://master:9000'
     l_ruta = ['/public/bicimad/201704_movements.json'
         ,'/public/bicimad/201705_movements.json'
@@ -298,9 +677,6 @@ if __name__ == "__main__":
         ,'/public/bicimad/201805_movements.json'
         ,'/public/bicimad/201806_movements.json']
     l_urls = [url + ruta for ruta in l_ruta]
-    spark = SparkSession.builder.getOrCreate()
-    # "hdfs://master:9000/public/bicimad/201708_movements.json"
-    df = spark.read.json(bicimad_path)
     aux = [{'Número': '001 a',
   'Gis_X': '440443.61',
   'Gis_Y': '4474290.65',
@@ -3799,12 +4175,17 @@ if __name__ == "__main__":
   'Latitud': '40.4505032',
   'Direccion': 'COMPLUTENSE, AVENIDA, frente al 7'}]
     df_geo = spark.createDataFrame(aux)
+    l_df = [spark.read.json(fichero) for fichero in l_ruta]
+    df = spark.read.json(l_ruta[0])
+    for i in range(1,len(l_df)):
+        df = df.union(l_df[i])
     df_new = preprocess(df, df_geo)
-    
+
     plot_analisys_by_day(df_new, barrio=None, total=False, years=None)
     plot_analisys_by_year(df_new, years=None)
     plot_stats(df_new, years=None)
     plot_stats_by_weekends(df_new, years=None)
     plot_stats_by_seasons(df_new, years=None)
     plot_diferencias_entrada_salida_por_barrios(df_new, years=None)
-
+    
+    
