@@ -81,6 +81,44 @@ Devuelve los años
 
 
 
+def plot_analisys_by_year(df, years=None):
+    """
+Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
+"""
+    
+    years = get_years(df) if years == None else years
+    
+    df_plot = None
+    
+    # hacer una columna para cada año del conteo de la columna que queramos medir
+    for year in years:
+        df_year = df.filter(df.year == year)\
+                            .groupBy("weekofyear").count()\
+                                .withColumnRenamed("count", year)
+        if df_plot == None:
+            df_plot = df_year
+        else:
+            df_plot = df_plot.join(df_year, on="weekofyear")
+    
+    # ordenar temporalmente (weekofyear) y luego hacer un plot de todos los años
+    df_plot = df_plot.orderBy("weekofyear").toPandas()
+    
+    fig = plt.figure(figsize=(15,5))
+    ax = fig.add_subplot(111)
+    
+    for year in years:
+        ax.bar(df_plot["weekofyear"], df_plot[year], label=year)
+
+    ax.legend()
+    ax.set_xlabel("semana")
+    ax.set_ylabel("nº de movimientos")
+    ax.set_title("Visualización global\nde los movimientos de las bicis")
+    
+    fig.savefig("data/plot_analisys_by_year.png")
+     
+
+
+
 def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == True -> estudio uniendo todos los barrios
     """
 #Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
@@ -112,45 +150,25 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
         else:
             df_plot = df_plot.join(df_year, on="dayofweek")
     
-    # Ordenar temporalmente (dayofweek) y luego hacemos un plot de todos los años
+    # Ordenar temporalmente (dayofweek) y luego hacemos un plot de todos los años    
+    df_plot = df_plot.orderBy("dayofweek").toPandas()
+
     ss = f" del barrio:\n{barrio}" if not total else ""
-    df_plot.orderBy("dayofweek").toPandas().plot.bar(
-            x = "dayofweek", 
-            y = years,
-            title = f"Visualización de los movimientos\n por días de la semana{ss}",
-            ylabel="nº de movimientos totales",
-            xlabel=""
-    ).set_xticklabels(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
-    
 
-
-def plot_analisys_by_year(df, years=None):
-    """
-Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
-"""
+    fig = plt.figure(figsize=(15,5))
+    ax = fig.add_subplot(111)
     
-    years = get_years(df) if years == None else years
-    
-    df_plot = None
-    
-    # hacer una columna para cada año del conteo de la columna que queramos medir
     for year in years:
-        df_year = df.filter(df.year == year)\
-                            .groupBy("weekofyear").count()\
-                                .withColumnRenamed("count", year)
-        if df_plot == None:
-            df_plot = df_year
-        else:
-            df_plot = df_plot.join(df_year, on="weekofyear")
+        ax.bar(df_plot["dayofweek"], df_plot[year], label=year)
+
+    ax.legend()
+    ax.set_xlabel("")
+    ax.set_ylabel("nº de movimientos totales")
+    # ax.set_xticks([])
+    ax.set_title(f"Visualización de los movimientos\n por días de la semana{ss}")
+    ax.set_xticklabels(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
     
-    # ordenar temporalmente (weekofyear) y luego hacer un plot de todos los años
-    df_plot.orderBy("weekofyear").toPandas().plot(
-            x = "weekofyear", 
-            y = years,
-            title = "Visualización global\nde los movimientos de las bicis",
-            xlabel="semana",
-            ylabel="nº de movimientos"
-    )
+    fig.savefig("data/plot_analisys_by_day.png")
 
 
 
@@ -249,8 +267,7 @@ Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las d
         ax.set_title(f"Datos geográficos sobre los barrios\n--{year}--")
 
         
-    
-    plt.show()
+    fig.savefig("data/plot_stats.png")
 
 
 
@@ -411,7 +428,7 @@ Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X
         ax.set_yticks([])
         ax.set_title(f"Datos geográficos sobre los barrios\n--Fines de semana : {year}--")
     
-        plt.show()
+        fig.savefig(f"data/plot_stats_by_weekends_{year}.png")
 
 
 
@@ -540,7 +557,7 @@ Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
 
             # --------------
 
-        plt.show()
+        fig.savefig(f"data/plot_stats_by_seasons_{year}.png")
 
         
 
@@ -636,7 +653,7 @@ El tamaño de los puntos va en funcón de la diferencia entre entradas y salidas
         ax.set_title(f"Diferencias entre salidas y llegadas\n--{year}--")
 
 
-        plt.show()
+        fig.savefig(f"data/plot_diferencias_entrada_salida_por_barrios_{year}.png")
 
         
         
