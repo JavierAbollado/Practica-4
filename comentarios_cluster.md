@@ -19,6 +19,8 @@ Desde la consola del cluster, copiamos los datos de "carpeta" en local en la car
 scp -r "carpeta" alumno@147.96.133.20:/home/alumno/Descargas/"carpeta"
 ```
 
+te pedirá una constraseña por permisos, en la uni es la típica ```aulamates``` y en local lo que uno tenga personalmente.
+
 
 # Cómo lidiar con las columnas de los distintos .json
 
