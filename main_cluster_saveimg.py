@@ -9,8 +9,8 @@ import numpy as np
 
 def preprocess_dates(df):
     """
-Separa las fechas por año, semana y día 
-"""
+    Separa las fechas por año, semana y día 
+    """
         
     df_new = df.withColumn("dayofweek", dayofweek(df.unplug_hourTime.getItem("$date")))\
             .withColumn("month", month(df.unplug_hourTime.getItem("$date")))\
@@ -21,6 +21,9 @@ Separa las fechas por año, semana y día
 
 
 def preprocess_ids(df, df_geo):
+    """
+    Separa las estaciones por barrios y añade sus respectivas geolocalizaciones
+    """
         
     # cambiar los ids de las estaciones por el barrio respectivo
     df_geo1  = df_geo.select("Número", "Barrio")\
@@ -49,11 +52,11 @@ def preprocess_ids(df, df_geo):
 
 def preprocess(df, df_geo):
     """
-resumen de los preprocesamientos
-Argumentos:
-    1) df = df = spark.read.json(data_path) 
-    2) df_geo = spark.read.csv(data_geo_path, header=True) 
-"""
+    resumen de los preprocesamientos
+    Argumentos:
+        1) df = df = spark.read.json(data_path) 
+        2) df_geo = spark.read.csv(data_geo_path, header=True) 
+    """
     df_new = preprocess_dates(df)
     df_new = preprocess_ids(df_new, df_geo)
     return df_new
@@ -64,15 +67,15 @@ Argumentos:
 # uno manualmente
 def get_random_barrio(df):
     """
-Devuelve un barrio aleatorio 
-"""
+    Devuelve un barrio aleatorio 
+    """
     return np.random.choice(df.select("id_salidas").distinct().toPandas()["id_salidas"].to_list())
 
 
 def get_years(df):
     """
-Devuelve los años
-"""
+    Devuelve los años
+    """
     # Guardar una lista con todos los años disponibles del DataFrame -> no serán más de 2 / 3 valores 
     # por lo que aunque parezca que hay mucho paso a pandas y a listas, la operación no es costosa
     years = df.select("year").distinct().toPandas()["year"].to_list()
@@ -81,10 +84,10 @@ Devuelve los años
 
 
 
-def plot_analisys_by_year(df, years=None):
+def plot_analysis_by_year(df, years=None):
     """
-Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
-"""
+    Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo largo de los años
+    """
     
     years = get_years(df) if years == None else years
     
@@ -114,15 +117,15 @@ Dibuja un gráfico con el crecimiento de los movimientos de las bicicletas a lo 
     ax.set_ylabel("nº de movimientos")
     ax.set_title("Visualización global\nde los movimientos de las bicis")
     
-    fig.savefig("data/plot_analisys_by_year.png")
+    fig.savefig("data/plot_analysis_by_year.png")
      
 
 
 
-def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == True -> estudio uniendo todos los barrios
+def plot_analysis_by_day(df, barrio=None, total=False, years=None): # total == True -> estudio uniendo todos los barrios
     """
-#Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
-"""  
+    #Dibuja un gráfico con los movimientos de las bicicletas en función del día de la semana a lo largo de cada año
+    """  
     
     
     #Si total es true entonces hacemos un estudio de todos los barrios del Dataframe
@@ -168,15 +171,15 @@ def plot_analisys_by_day(df, barrio=None, total=False, years=None): # total == T
     ax.set_title(f"Visualización de los movimientos\n por días de la semana{ss}")
     ax.set_xticklabels(["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"])
     
-    fig.savefig("data/plot_analisys_by_day.png")
+    fig.savefig("data/plot_analysis_by_day.png")
 
 
 
 def plot_stats(df, years=None):
     """
-Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
- un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-"""
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+     un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    """
     
     years = get_years(df) if years == None else years
     
@@ -275,10 +278,10 @@ Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las d
 
 def plot_stats_by_weekends(df, years=None):
     """
-Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
-un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
-"""
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+    un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X, J)
+    """
     
     
     years = get_years(df) if years == None else years
@@ -436,10 +439,10 @@ Esto lo hace diferenciando entre fin de semana (V, S, D) y entre semana (L, M, X
 
 def plot_stats_by_seasons(df, years=None):
     """
-Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
-un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
-Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
-"""
+    Dibuja un gráfico con la densidad de los movimientos de las bicicletas en las distintas zonas y 
+    un gráfico con resultados estadísticos relevantes como la media, el máximo y mínimo .
+    Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
+    """
     
     years = get_years(df) if years == None else years
     
@@ -565,9 +568,9 @@ Esto lo hace diferenciando entre estaciones: Primavera, Verano, Otoño, Invierno
 
 def plot_diferencias_entrada_salida_por_barrios(df, years=None):
     """
-Dibuja un gráfico de puntos de los barrios y pinta en verde los barrios en los que entran más bicis y en rojo los que salen mas bicis
-El tamaño de los puntos va en funcón de la diferencia entre entradas y salidas de las bicicletas.
-"""
+    Dibuja un gráfico de puntos de los barrios y pinta en verde los barrios en los que entran más bicis y en rojo los que salen mas bicis
+    El tamaño de los puntos va en funcón de la diferencia entre entradas y salidas de las bicicletas.
+    """
 
         
     years = get_years(df) if years == None else years
@@ -666,8 +669,9 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 2:
+        n = len(sys.argv)
         geo_path = sys.argv[1]
-        bicimad_path = sys.argv[2]
+        paths = [sys.argv[i] for i in range(2,n)]
     else:
         print("main.py <path to geo csv> <path to dataframe>")
         sys.exit(0)
@@ -676,9 +680,20 @@ if __name__ == "__main__":
 
     spark = SparkSession.builder.getOrCreate()
 
-    df = spark.read.json(bicimad_path)
+    # load & join all the json files
+    df = None 
+    for path in paths:
+        df_aux = spark.read.json(path)
+        if df == None:
+            df = df_aux
+        else:
+            df.union(df_aux)
+            df = df.dropDuplicates()
+            
+    # load the geo file
     df_geo = spark.read.csv(geo_path, header=True)
 
     df_new = preprocess(df, df_geo)
 
     # ejecutar los plots que queráis
+    plot_analysis_by_year(df_new)
