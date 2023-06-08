@@ -21,6 +21,12 @@ scp -r "carpeta" alumno@147.96.133.20:/home/alumno/Descargas/"carpeta"
 
 te pedirá una constraseña por permisos, en la uni es la típica ```aulamates``` y en local lo que uno tenga personalmente.
 
+## ültimos cambios 
+
+Podeís encontrar los últimos cambios en 
+
+ - Cluster: ```ls home/faboll01```
+ - Hadoop: ```hdfs dfs -ls hdfs://master:9000/user/faboll01```
 
 # Cómo lidiar con las columnas de los distintos .json
 
