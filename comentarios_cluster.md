@@ -1,3 +1,25 @@
+# Ayudas
+
+## Acceder a los archivos grandes de Luis
+
+```
+hdfs dfs -ls /public/bicimad
+```
+
+para hacer copias de archivos dentro del hdfs accedemos a la dirección completa ```hdfs://master:9000/public/bicimad```.
+
+## Copiar los archivos del cluster al ordenador local
+
+Desde la consola del cluster, copiamos los datos de "carpeta" en local en la carpeta común "Descargas" del ordenador.
+
+ - IP : 147.96.133.20 (este es un ejemplo)
+ - nombre : alumno (esto es en el caso de los ordenadores de la uni, en casa será el nombre local del ordenador)
+
+```
+scp -r "carpeta" alumno@147.96.133.20:/home/alumno/Descargas/"carpeta"
+```
+
+
 # Cómo lidiar con las columnas de los distintos .json
 
 Nos dan problemas con las columnas de los DataFrames, por tanto primero veamos qué columnas tenemos. Para ello creamos un pequeño script ```show_columns.py``` con el siguiente código:
